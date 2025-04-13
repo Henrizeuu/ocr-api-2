@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 
 export async function ocrFromPdf(pdfPath) {
+  console.log("📥 Recebido PDF:", pdfPath);
+
   const outputDir = path.join('uploads', 'converted');
   await fs.mkdir(outputDir, { recursive: true });
 
@@ -16,15 +18,16 @@ export async function ocrFromPdf(pdfPath) {
     height: 1000,
   });
 
-  const totalPages = 1; // você pode ajustar se quiser mais páginas
-  let fullText = '';
+  try {
+    const result = await convert(1);
+    console.log("🖼️ Imagem gerada:", result.path);
 
-  for (let i = 1; i <= totalPages; i++) {
-    const result = await convert(i);
-    const imagePath = result.path;
-    const ocr = await Tesseract.recognize(imagePath, 'por');
-    fullText += ocr.data.text + '\n';
+    const ocr = await Tesseract.recognize(result.path, 'por');
+    console.log("📄 Texto extraído:", ocr.data.text);
+
+    return ocr.data.text.trim();
+  } catch (error) {
+    console.error("❌ Erro no OCR:", error);
+    throw error;
   }
-
-  return fullText.trim();
 }
